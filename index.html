@@ -139,7 +139,7 @@
           // Construire une liste de bateaux avec DTF
           const boatData = [];
           devices.forEach((device, i) => {
-            const name = device.getAttribute("name") || "Unknown Boat";
+            const boatName = device.getAttribute("name") || "Unknown Boat";
             const positions = device.querySelectorAll("Position");
             if (!positions.length) return;
 
@@ -155,7 +155,7 @@
           boatData.forEach(({ device, name, dtf, index }) => {
             const positions = device.querySelectorAll("Position");
     
-            const name = device.getAttribute("name") || "Unknown Boat";
+            const boatName = device.getAttribute("name") || "Unknown Boat";
             const positions = device.querySelectorAll("Position");
             if (!positions.length) return;
 
@@ -209,7 +209,7 @@
 
             const item = document.createElement("div");
             item.className = "boat-item";
-            item.textContent = name + " (" + dtf + " NM)";
+            item.textContent = boatName + " (" + dtf + " NM)";
             item.style.borderLeftColor = colors[i % colors.length];
             item.onclick = () => {
               map.setView([lat, lon], 10);
