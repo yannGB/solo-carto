@@ -102,24 +102,27 @@
           const latestPoint = points[0];
           const latitude = latestPoint.lat;
           const longitude = latestPoint.lon;
-          const cog = latestPoint.cog || 0;
-          const couleur = colors[i % colors.length];
+          const currentCog = latestPoint.cog || 0;
           
-          const boatIcon = L.divIcon({
+          // Icône triangle orienté selon le cap (COG)
+          const triangleIcon = L.divIcon({
             className: '',
-            html: `<svg width="20" height="40" viewBox="0 0 20 40" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(${cog}deg);">
-              <polygon points="10,0 20,40 10,30 0,40" fill="${couleur}" />
-            </svg>`,
-            iconSize: [20, 40],
-            iconAnchor: [10, 20]
+            html: `<div style="
+              width: 0; 
+              height: 0; 
+              border-left: 10px solid transparent;
+              border-right: 10px solid transparent;
+              border-bottom: 20px solid ${color}; 
+              transform: rotate(${currentCog}deg);
+              transform-origin: center;
+            "></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
           });
           
-          const marker = L.marker([latitude, longitude], { icon: boatIcon }).addTo(map).bindPopup(popup);
-          
-          const polyline = L.polyline(path, {
-            color: couleur,
-            weight: 2
-          }).addTo(map);
+          L.marker([latitude, longitude], { icon: triangleIcon })
+            .addTo(map)
+            .bindPopup(popupContent);
 
             window.markers.push(marker);
             window.tracks.push(polyline);
