@@ -140,8 +140,8 @@
           const boatData = [];
           devices.forEach((device, i) => {
             const boatName = device.getAttribute("name") || "Unknown Boat";
-            let displayPoints = device.querySelectorAll("Position");
-            if (!displayPoints.length) return;
+            let xmlDisplayPoints = device.querySelectorAll("Position");
+            if (!xmlDisplayPoints.length) return;
 
             const lat = parseFloat(positions[0].querySelector("Latitude").textContent);
             const lon = parseFloat(positions[0].querySelector("Longitude").textContent);
@@ -153,20 +153,20 @@
           boatData.sort((a, b) => a.dtf - b.dtf);
 
           boatData.forEach(({ device, name, dtf, index }) => {
-            let displayPoints = device.querySelectorAll("Position");
+            let xmlDisplayPoints = device.querySelectorAll("Position");
     
             const boatName = device.getAttribute("name") || "Unknown Boat";
-            let displayPoints = device.querySelectorAll("Position");
-            if (!displayPoints.length) return;
+            let xmlDisplayPoints = device.querySelectorAll("Position");
+            if (!xmlDisplayPoints.length) return;
 
             const path = [];
-            displayPoints.forEach(pos => {
+            xmlDisplayPoints.forEach(pos => {
               const lat = parseFloat(pos.querySelector("Latitude").textContent);
               const lon = parseFloat(pos.querySelector("Longitude").textContent);
               path.push([lat, lon]);
             });
 
-            const latest = displayPoints[0];
+            const latest = xmlDisplayPoints[0];
             const lat = parseFloat(latest.querySelector("Latitude").textContent);
             const lon = parseFloat(latest.querySelector("Longitude").textContent);
             const sog = latest.querySelector("SOG")?.textContent || "N/A";
