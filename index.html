@@ -1,66 +1,84 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Solo Guy Cotten - Cartographie Live</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-      html,
-      body {
-        margin: 0;
-        height: 100%;
-        font-family: sans-serif;
-      }
-      #sidebar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 230px;
-        background: #f3f3f3;
-        padding: 10px;
-        overflow-y: auto;
-        z-index: 1000;
-      }
-      #windy {
-        position: absolute;
-        top: 0;
-        left: 230px;
-        right: 0;
-        bottom: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="sidebar">
-      <h3>Skippers</h3>
-      <button onclick="loadPositions()">🔄 Rafraîchir</button>
-      <ul id="skipperList"></ul>
-    </div>
-    <div id="windy"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carte Solo Guy Cotten 2025</title>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+  <!-- Leaflet 1.4.0 (requis par Windy) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
 
-    <script>
-      // Initialisation de la carte Windy
-      const options = {
-        key: "HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn", // Clé Windy valide
-        verbose: false,
-        lat: 47.5,
-        lon: -4.1,
-        zoom: 7,
-      };
+  <!-- Style minimal -->
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: sans-serif;
+    }
 
-      windyInit(options, windyAPI => {
-        const { map } = windyAPI;
+    #windy {
+      position: absolute;
+      top: 0;
+      left: 200px; /* espace pour la sidebar */
+      right: 0;
+      bottom: 0;
+      z-index: 0;
+    }
 
-        // Pour la suite, les éléments Leaflet seront ajoutés ici
-        // mais pour ce premier test, on ne fait qu’afficher la carte
+    #sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 200px;
+      background: #f4f4f4;
+      padding: 10px;
+      overflow-y: auto;
+      z-index: 10;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
 
-        console.log("✅ Carte Windy initialisée.");
-      });
-    </script>
-  </body>
+    #sidebar h2 {
+      font-size: 16px;
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <h2>Skippers</h2>
+    <button onclick="location.reload()">🔄 Rafraîchir</button>
+    <ul id="skipperList">
+      <!-- La liste des skippers sera injectée ici -->
+    </ul>
+  </div>
+
+  <div id="windy"></div>
+
+  <!-- Windy API -->
+  <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+  <script>
+    const options = {
+      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn', // Ta clé API Windy
+      verbose: true,
+      lat: 47.5,
+      lon: -3.9,
+      zoom: 7,
+    };
+
+    windyInit(options, function(windyAPI) {
+      const { map } = windyAPI;
+
+      // Exemple de trace statique (à remplacer ensuite par les vraies positions)
+      const exampleMarker = L.marker([47.5, -4.0]).addTo(map)
+        .bindPopup('Position fictive de test');
+
+      // Affichage par défaut : Wind à 10m déjà activé via l'API
+    });
+  </script>
+</body>
 </html>
