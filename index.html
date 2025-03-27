@@ -34,7 +34,7 @@
 
       async function loadPositions() {
         try {
-          const res = await fetch('http://solo.studiok37.com/proxy.php');
+          const res = await fetch('https://solo.studiok37.com/proxy.php');
           const xmlText = await res.text();
           const parser = new DOMParser();
           const xml = parser.parseFromString(xmlText, "application/xml");
