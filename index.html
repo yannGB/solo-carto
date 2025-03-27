@@ -1,9 +1,9 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Solo Guy Cotten 2025 - Live Tracking + Traces</title>
+  <title>Solo Guy Cotten 2025 - Tracking + Traces</title>
   <style>
     html, body {
       margin: 0;
@@ -22,12 +22,17 @@
 
   <script>
     const options = {
-      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn', // Clé Windy
+      key: 'emTiHvhBn00yJIX2mGKca5wADXNbEM1A',
       verbose: true,
       lat: 47.5,
       lon: -4.1,
       zoom: 8,
     };
+
+    const colors = [
+      'red', 'blue', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'teal', 'maroon',
+      'navy', 'olive', 'darkgreen', 'chocolate', 'indigo', 'coral', 'tomato', 'gold', 'deepskyblue', 'hotpink'
+    ];
 
     windyInit(options, windyAPI => {
       const { map } = windyAPI;
@@ -45,13 +50,12 @@
           window.tracks = [];
 
           const devices = xml.querySelectorAll("Device");
-          devices.forEach(device => {
+          devices.forEach((device, i) => {
             const name = device.getAttribute("name") || "Unknown Boat";
             const positions = device.querySelectorAll("Position");
             if (!positions.length) return;
 
             const path = [];
-
             positions.forEach(pos => {
               const lat = parseFloat(pos.querySelector("Latitude").textContent);
               const lon = parseFloat(pos.querySelector("Longitude").textContent);
@@ -63,11 +67,21 @@
             const lon = parseFloat(latest.querySelector("Longitude").textContent);
             const sog = latest.querySelector("SOG")?.textContent || "N/A";
             const cog = latest.querySelector("COG")?.textContent || "N/A";
-            const time = latest.querySelector("GpsAt")?.textContent || "N/A";
+            const timeUTC = latest.querySelector("GpsAt")?.textContent || "N/A";
+
+            const localTime = new Date(timeUTC);
+            const options = {
+              timeZone: 'Europe/Paris',
+              hour: '2-digit',
+              minute: '2-digit',
+              day: '2-digit',
+              month: '2-digit'
+            };
+            const localTimeStr = localTime.toLocaleString('fr-FR', options);
 
             const popup = `
               <b>${name}</b><br>
-              <small>${time}</small><br>
+              <small>Dernier point : ${localTimeStr}</small><br>
               Lat: ${lat.toFixed(4)}<br>
               Lon: ${lon.toFixed(4)}<br>
               Vitesse: ${sog} kn<br>
@@ -75,7 +89,10 @@
             `;
 
             const marker = L.marker([lat, lon]).addTo(map).bindPopup(popup);
-            const polyline = L.polyline(path, { color: 'yellow', weight: 2 }).addTo(map);
+            const polyline = L.polyline(path, {
+              color: colors[i % colors.length],
+              weight: 2
+            }).addTo(map);
 
             window.markers.push(marker);
             window.tracks.push(polyline);
