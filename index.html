@@ -140,7 +140,7 @@
           const boatData = [];
           devices.forEach((device, i) => {
             const boatName = device.getAttribute("name") || "Unknown Boat";
-            const displayPoints = device.querySelectorAll("Position");
+            let displayPoints = device.querySelectorAll("Position");
             if (!displayPoints.length) return;
 
             const lat = parseFloat(positions[0].querySelector("Latitude").textContent);
@@ -153,10 +153,10 @@
           boatData.sort((a, b) => a.dtf - b.dtf);
 
           boatData.forEach(({ device, name, dtf, index }) => {
-            const displayPoints = device.querySelectorAll("Position");
+            let displayPoints = device.querySelectorAll("Position");
     
             const boatName = device.getAttribute("name") || "Unknown Boat";
-            const displayPoints = device.querySelectorAll("Position");
+            let displayPoints = device.querySelectorAll("Position");
             if (!displayPoints.length) return;
 
             const path = [];
