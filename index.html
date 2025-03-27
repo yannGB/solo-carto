@@ -3,15 +3,39 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Solo Guy Cotten 2025 - Tracking Confirmé</title>
+  <title>Solo Guy Cotten 2025 - Live Tracking</title>
   <style>
     html, body {
       margin: 0;
       height: 100%;
+      font-family: sans-serif;
     }
     #windy {
-      width: 100%;
-      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 250px;
+      right: 0;
+      bottom: 0;
+    }
+    #sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 250px;
+      background: #f4f4f4;
+      padding: 10px;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+    }
+    .boat-item {
+      margin: 5px 0;
+      padding: 5px;
+      cursor: pointer;
+      border-left: 5px solid transparent;
+    }
+    .boat-item:hover {
+      background: #eee;
     }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
@@ -19,6 +43,7 @@
   <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
 </head>
 <body>
+  <div id="sidebar"><h3>Skippers</h3><div id="boatList"></div></div>
   <div id="windy"></div>
 
   <script>
@@ -35,8 +60,17 @@
       'navy', 'olive', 'darkgreen', 'chocolate', 'indigo', 'coral', 'tomato', 'gold', 'deepskyblue', 'hotpink'
     ];
 
+    const parcours = [[47.84617, -3.95517], [47.76733, -4.012], [47.7575, -4.0675], [47.75532, -4.31867], [47.7745, -4.378], [47.79667, -4.39833], [48.03947, -4.7596], [48.36982, -5.07917], [48.06417, -5.13667], [47.64632, -4.02332], [46.84083, -3.1375], [47.48567, -3.29098], [47.70933, -3.83048], [47.79747, -3.89082], [47.84617, -3.95517]];
+
     windyInit(options, windyAPI => {
       const { map } = windyAPI;
+      const boatList = document.getElementById("boatList");
+
+      const parcoursLine = L.polyline(parcours, {
+        color: "#FBCF15",
+        weight: 3,
+        dashArray: "5, 5"
+      }).addTo(map);
 
       async function loadPositions() {
         try {
@@ -45,10 +79,11 @@
           const parser = new DOMParser();
           const xml = parser.parseFromString(xmlText, "application/xml");
 
-          if (window.markers) window.markers.forEach(marker => map.removeLayer(marker));
-          if (window.tracks) window.tracks.forEach(track => map.removeLayer(track));
+          if (window.markers) window.markers.forEach(m => map.removeLayer(m));
+          if (window.tracks) window.tracks.forEach(t => map.removeLayer(t));
           window.markers = [];
           window.tracks = [];
+          boatList.innerHTML = "";
 
           const devices = xml.querySelectorAll("Device");
           devices.forEach((device, i) => {
@@ -57,16 +92,13 @@
             if (!positions.length) return;
 
             const path = [];
-
-            positions.forEach((pos, index) => {
+            positions.forEach(pos => {
               const lat = parseFloat(pos.querySelector("Latitude").textContent);
               const lon = parseFloat(pos.querySelector("Longitude").textContent);
-              const gpsAt = pos.querySelector("GpsAt")?.textContent;
               path.push([lat, lon]);
-              console.log(`[${name}] Point ${index} : ${gpsAt}`);
             });
 
-            const latest = positions[0]; // LA PLUS RÉCENTE
+            const latest = positions[0]; // point le plus récent
             const lat = parseFloat(latest.querySelector("Latitude").textContent);
             const lon = parseFloat(latest.querySelector("Longitude").textContent);
             const sog = latest.querySelector("SOG")?.textContent || "N/A";
@@ -105,6 +137,16 @@
               color: colors[i % colors.length],
               weight: 2
             }).addTo(map);
+
+            const item = document.createElement("div");
+            item.className = "boat-item";
+            item.textContent = name;
+            item.style.borderLeftColor = colors[i % colors.length];
+            item.onclick = () => {
+              map.setView([lat, lon], 10);
+              marker.openPopup();
+            };
+            boatList.appendChild(item);
 
             window.markers.push(marker);
             window.tracks.push(polyline);
