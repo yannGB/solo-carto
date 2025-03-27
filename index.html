@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Solo Guy Cotten 2025 - Tracking + Traces + Bateaux</title>
+  <title>Solo Guy Cotten 2025 - Tracking Confirmé</title>
   <style>
     html, body {
       margin: 0;
@@ -23,7 +23,7 @@
 
   <script>
     const options = {
-      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn', // bonne clé API Windy
+      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn',
       verbose: true,
       lat: 47.5,
       lon: -4.1,
@@ -57,13 +57,16 @@
             if (!positions.length) return;
 
             const path = [];
-            positions.forEach(pos => {
+
+            positions.forEach((pos, index) => {
               const lat = parseFloat(pos.querySelector("Latitude").textContent);
               const lon = parseFloat(pos.querySelector("Longitude").textContent);
+              const gpsAt = pos.querySelector("GpsAt")?.textContent;
               path.push([lat, lon]);
+              console.log(`[${name}] Point ${index} : ${gpsAt}`);
             });
 
-            const latest = positions[positions.length - 1];
+            const latest = positions[positions.length - 1]; // LA PLUS RÉCENTE
             const lat = parseFloat(latest.querySelector("Latitude").textContent);
             const lon = parseFloat(latest.querySelector("Longitude").textContent);
             const sog = latest.querySelector("SOG")?.textContent || "N/A";
