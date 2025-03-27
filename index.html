@@ -126,7 +126,26 @@
           boatList.innerHTML = "";
 
           const devices = xml.querySelectorAll("Device");
+          
+          // Construire une liste de bateaux avec DTF
+          const boatData = [];
           devices.forEach((device, i) => {
+            const name = device.getAttribute("name") || "Unknown Boat";
+            const positions = device.querySelectorAll("Position");
+            if (!positions.length) return;
+
+            const lat = parseFloat(positions[0].querySelector("Latitude").textContent);
+            const lon = parseFloat(positions[0].querySelector("Longitude").textContent);
+            const dtf = parseFloat(computeDTF(lat, lon));
+            boatData.push({ device, name, dtf, index: i });
+          });
+
+          // Trier par DTF croissant
+          boatData.sort((a, b) => a.dtf - b.dtf);
+
+          boatData.forEach(({ device, name, dtf, index }) => {
+            const positions = device.querySelectorAll("Position");
+    
             const name = device.getAttribute("name") || "Unknown Boat";
             const positions = device.querySelectorAll("Position");
             if (!positions.length) return;
