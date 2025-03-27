@@ -11,6 +11,7 @@
       font-family: sans-serif;
     }
     #windy {
+  display: block;
       position: absolute;
       top: 0;
       left: 250px;
@@ -123,7 +124,15 @@
           if (window.tracks) window.tracks.forEach(t => map.removeLayer(t));
           window.markers = [];
           window.tracks = [];
+          
           boatList.innerHTML = "";
+          const status = document.createElement("div");
+          status.style.margin = "10px 0";
+          status.style.fontSize = "12px";
+          status.style.color = "#888";
+          status.innerText = "Chargement des positions...";
+          boatList.appendChild(status);
+    
 
           const devices = xml.querySelectorAll("Device");
           
@@ -212,7 +221,10 @@
             window.tracks.push(polyline);
           });
         } catch (error) {
+          
           console.error("Erreur lors du chargement des positions :", error);
+          boatList.innerHTML = "<p style='color:red; font-size:13px;'>Erreur de chargement des positions. Vérifiez le proxy ou la console navigateur.</p>";
+    
         }
       }
 
