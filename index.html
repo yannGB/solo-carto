@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Solo Guy Cotten 2025 - Tracking + Traces</title>
+  <title>Solo Guy Cotten 2025 - Tracking + Traces + Bateaux</title>
   <style>
     html, body {
       margin: 0;
@@ -14,6 +14,7 @@
       height: 100vh;
     }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
   <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
 </head>
@@ -22,7 +23,7 @@
 
   <script>
     const options = {
-      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn',
+      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn', // bonne clé API Windy
       verbose: true,
       lat: 47.5,
       lon: -4.1,
@@ -70,14 +71,14 @@
             const timeUTC = latest.querySelector("GpsAt")?.textContent || "N/A";
 
             const localTime = new Date(timeUTC);
-            const options = {
+            const optionsTime = {
               timeZone: 'Europe/Paris',
               hour: '2-digit',
               minute: '2-digit',
               day: '2-digit',
               month: '2-digit'
             };
-            const localTimeStr = localTime.toLocaleString('fr-FR', options);
+            const localTimeStr = localTime.toLocaleString('fr-FR', optionsTime);
 
             const popup = `
               <b>${name}</b><br>
@@ -88,7 +89,15 @@
               Cap: ${cog}°
             `;
 
-            const marker = L.marker([lat, lon]).addTo(map).bindPopup(popup);
+            const boatIcon = L.divIcon({
+              className: '',
+              html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${colors[i % colors.length]}"><path d="M12 2C10.895 2 10 2.895 10 4V11.586L6.707 8.293C6.077 7.663 5 8.109 5 9V14.586L3.707 13.293C3.077 12.663 2 13.109 2 14V20C2 21.105 2.895 22 4 22H20C21.105 22 22 21.105 22 20V14C22 13.109 20.923 12.663 20.293 13.293L19 14.586V9C19 8.109 17.923 7.663 17.293 8.293L14 11.586V4C14 2.895 13.105 2 12 2Z"/></svg>`,
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+              popupAnchor: [0, -10]
+            });
+
+            const marker = L.marker([lat, lon], { icon: boatIcon }).addTo(map).bindPopup(popup);
             const polyline = L.polyline(path, {
               color: colors[i % colors.length],
               weight: 2
