@@ -115,6 +115,32 @@
 
       loadPositions();
       setInterval(loadPositions, 15 * 60 * 1000);
+
+      // Ajouter le tracé du parcours en jaune
+const parcoursCoords = [
+  [47.84617, -3.95517],
+  [47.76733, -4.01200],
+  [47.75750, -4.06750],
+  [47.75532, -4.31867],
+  [47.77450, -4.37800],
+  [47.79667, -4.39833],
+  [48.03947, -4.75960],
+  [48.36982, -5.07917],
+  [48.06417, -5.13667],
+  [47.64632, -4.02332],
+  [46.84083, -3.13750],
+  [47.48567, -3.29098],
+  [47.70933, -3.83048],
+  [47.79747, -3.89082],
+  [47.84617, -3.95517] // retour au départ
+];
+
+const parcours = L.polyline(parcoursCoords, {
+  color: '#FBCF15',
+  weight: 3,
+  dashArray: '5, 5'
+}).addTo(map);
+      
     });
   </script>
 </body>
