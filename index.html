@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Solo Guy Cotten 2025 - Live Tracking + Traces</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    #windy {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+  <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+</head>
+<body>
+  <div id="windy"></div>
+
+  <script>
+    const options = {
+      key: 'emTiHvhBn00yJIX2mGKca5wADXNbEM1A', // Clé Windy
+      verbose: true,
+      lat: 47.5,
+      lon: -4.1,
+      zoom: 8,
+    };
+
+    windyInit(options, windyAPI => {
+      const { map } = windyAPI;
+
+      async function loadPositions() {
+        try {
+          const res = await fetch('http://solo.studiok37.com/proxy.php');
+          const xmlText = await res.text();
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(xmlText, "application/xml");
+
+          if (window.markers) window.markers.forEach(marker => map.removeLayer(marker));
+          if (window.tracks) window.tracks.forEach(track => map.removeLayer(track));
+          window.markers = [];
+          window.tracks = [];
+
+          const devices = xml.querySelectorAll("Device");
+          devices.forEach(device => {
+            const name = device.getAttribute("name") || "Unknown Boat";
+            const positions = device.querySelectorAll("Position");
+            if (!positions.length) return;
+
+            const path = [];
+
+            positions.forEach(pos => {
+              const lat = parseFloat(pos.querySelector("Latitude").textContent);
+              const lon = parseFloat(pos.querySelector("Longitude").textContent);
+              path.push([lat, lon]);
+            });
+
+            const latest = positions[positions.length - 1];
+            const lat = parseFloat(latest.querySelector("Latitude").textContent);
+            const lon = parseFloat(latest.querySelector("Longitude").textContent);
+            const sog = latest.querySelector("SOG")?.textContent || "N/A";
+            const cog = latest.querySelector("COG")?.textContent || "N/A";
+            const time = latest.querySelector("GpsAt")?.textContent || "N/A";
+
+            const popup = `
+              <b>${name}</b><br>
+              <small>${time}</small><br>
+              Lat: ${lat.toFixed(4)}<br>
+              Lon: ${lon.toFixed(4)}<br>
+              Vitesse: ${sog} kn<br>
+              Cap: ${cog}°
+            `;
+
+            const marker = L.marker([lat, lon]).addTo(map).bindPopup(popup);
+            const polyline = L.polyline(path, { color: 'yellow', weight: 2 }).addTo(map);
+
+            window.markers.push(marker);
+            window.tracks.push(polyline);
+          });
+        } catch (error) {
+          console.error("Erreur lors du chargement des positions :", error);
+        }
+      }
+
+      loadPositions();
+      setInterval(loadPositions, 15 * 60 * 1000);
+    });
+  </script>
+</body>
+</html>
