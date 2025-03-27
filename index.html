@@ -2,82 +2,119 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carte Solo Guy Cotten 2025</title>
-
-  <!-- Leaflet 1.4.0 (requis par Windy) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-  />
-  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
-
-  <!-- Style minimal -->
+  <title>Solo Guy Cotten 2025 - Tracking Confirmé</title>
   <style>
     html, body {
       margin: 0;
       height: 100%;
-      font-family: sans-serif;
     }
-
     #windy {
-      position: absolute;
-      top: 0;
-      left: 200px; /* espace pour la sidebar */
-      right: 0;
-      bottom: 0;
-      z-index: 0;
-    }
-
-    #sidebar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 200px;
-      background: #f4f4f4;
-      padding: 10px;
-      overflow-y: auto;
-      z-index: 10;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    }
-
-    #sidebar h2 {
-      font-size: 16px;
-      margin-top: 0;
+      width: 100%;
+      height: 100vh;
     }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+  <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
 </head>
 <body>
-  <div id="sidebar">
-    <h2>Skippers</h2>
-    <button onclick="location.reload()">🔄 Rafraîchir</button>
-    <ul id="skipperList">
-      <!-- La liste des skippers sera injectée ici -->
-    </ul>
-  </div>
-
   <div id="windy"></div>
 
-  <!-- Windy API -->
-  <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
   <script>
     const options = {
-      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn', // Ta clé API Windy
+      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn',
       verbose: true,
       lat: 47.5,
-      lon: -3.9,
-      zoom: 7,
+      lon: -4.1,
+      zoom: 8,
     };
 
-    windyInit(options, function(windyAPI) {
+    const colors = [
+      'red', 'blue', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'teal', 'maroon',
+      'navy', 'olive', 'darkgreen', 'chocolate', 'indigo', 'coral', 'tomato', 'gold', 'deepskyblue', 'hotpink'
+    ];
+
+    windyInit(options, windyAPI => {
       const { map } = windyAPI;
 
-      // Exemple de trace statique (à remplacer ensuite par les vraies positions)
-      const exampleMarker = L.marker([47.5, -4.0]).addTo(map)
-        .bindPopup('Position fictive de test');
+      async function loadPositions() {
+        try {
+          const res = await fetch('https://solo.studiok37.com/proxy.php');
+          const xmlText = await res.text();
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(xmlText, "application/xml");
 
-      // Affichage par défaut : Wind à 10m déjà activé via l'API
+          if (window.markers) window.markers.forEach(marker => map.removeLayer(marker));
+          if (window.tracks) window.tracks.forEach(track => map.removeLayer(track));
+          window.markers = [];
+          window.tracks = [];
+
+          const devices = xml.querySelectorAll("Device");
+          devices.forEach((device, i) => {
+            const name = device.getAttribute("name") || "Unknown Boat";
+            const positions = device.querySelectorAll("Position");
+            if (!positions.length) return;
+
+            const path = [];
+
+            positions.forEach((pos, index) => {
+              const lat = parseFloat(pos.querySelector("Latitude").textContent);
+              const lon = parseFloat(pos.querySelector("Longitude").textContent);
+              const gpsAt = pos.querySelector("GpsAt")?.textContent;
+              path.push([lat, lon]);
+              console.log(`[${name}] Point ${index} : ${gpsAt}`);
+            });
+
+            const latest = positions[positions.length - 1]; // LA PLUS RÉCENTE
+            const lat = parseFloat(latest.querySelector("Latitude").textContent);
+            const lon = parseFloat(latest.querySelector("Longitude").textContent);
+            const sog = latest.querySelector("SOG")?.textContent || "N/A";
+            const cog = latest.querySelector("COG")?.textContent || "N/A";
+            const timeUTC = latest.querySelector("GpsAt")?.textContent || "N/A";
+
+            const localTime = new Date(timeUTC);
+            const optionsTime = {
+              timeZone: 'Europe/Paris',
+              hour: '2-digit',
+              minute: '2-digit',
+              day: '2-digit',
+              month: '2-digit'
+            };
+            const localTimeStr = localTime.toLocaleString('fr-FR', optionsTime);
+
+            const popup = `
+              <b>${name}</b><br>
+              <small>Dernier point : ${localTimeStr}</small><br>
+              Lat: ${lat.toFixed(4)}<br>
+              Lon: ${lon.toFixed(4)}<br>
+              Vitesse: ${sog} kn<br>
+              Cap: ${cog}°
+            `;
+
+            const boatIcon = L.divIcon({
+              className: '',
+              html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${colors[i % colors.length]}"><path d="M12 2C10.895 2 10 2.895 10 4V11.586L6.707 8.293C6.077 7.663 5 8.109 5 9V14.586L3.707 13.293C3.077 12.663 2 13.109 2 14V20C2 21.105 2.895 22 4 22H20C21.105 22 22 21.105 22 20V14C22 13.109 20.923 12.663 20.293 13.293L19 14.586V9C19 8.109 17.923 7.663 17.293 8.293L14 11.586V4C14 2.895 13.105 2 12 2Z"/></svg>`,
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+              popupAnchor: [0, -10]
+            });
+
+            const marker = L.marker([lat, lon], { icon: boatIcon }).addTo(map).bindPopup(popup);
+            const polyline = L.polyline(path, {
+              color: colors[i % colors.length],
+              weight: 2
+            }).addTo(map);
+
+            window.markers.push(marker);
+            window.tracks.push(polyline);
+          });
+        } catch (error) {
+          console.error("Erreur lors du chargement des positions :", error);
+        }
+      }
+
+      loadPositions();
+      setInterval(loadPositions, 15 * 60 * 1000);
     });
   </script>
 </body>
