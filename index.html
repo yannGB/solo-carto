@@ -99,19 +99,19 @@
               popupAnchor: [0, -10]
             });
 
-            const latest = points[0]; // Point le plus récent
-            const lat = latest.lat;
-            const lon = latest.lon;
-            const cog = latest.cog || 0; // cap en degrés
+            const latestPoint = points[0];
+            const lat = latestPoint.lat;
+            const lon = latestPoint.lon;
+            const cog = latestPoint.cog || 0;
             const couleur = colors[i % colors.length];
-  
+            
             const boatIcon = L.divIcon({
               className: '',
               html: `<svg width="20" height="40" viewBox="0 0 20 40" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(${cog}deg);">
                 <polygon points="10,0 20,40 10,30 0,40" fill="${couleur}" />
               </svg>`,
               iconSize: [20, 40],
-              iconAnchor: [10, 20] // centre du triangle à mi-hauteur
+              iconAnchor: [10, 20]
             });
             
             const marker = L.marker([lat, lon], { icon: boatIcon }).addTo(map).bindPopup(popup);
