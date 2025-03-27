@@ -63,7 +63,10 @@
               path.push([lat, lon]);
             });
 
-            const latest = positions[positions.length - 1];
+            
+            const lastIndex = positions.length - 1;
+            const latest = positions[lastIndex];
+    
             const lat = parseFloat(latest.querySelector("Latitude").textContent);
             const lon = parseFloat(latest.querySelector("Longitude").textContent);
             const sog = latest.querySelector("SOG")?.textContent || "N/A";
