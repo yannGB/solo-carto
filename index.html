@@ -2,235 +2,70 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Solo Guy Cotten 2025 - DTF & Sidebar</title>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: sans-serif;
-    }
-    #windy {
-  display: block;
-      position: absolute;
-      top: 0;
-      left: 250px;
-      right: 0;
-      bottom: 0;
-    }
-    #sidebar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 250px;
-      background: #f4f4f4;
-      padding: 10px;
-      overflow-y: auto;
-      border-right: 1px solid #ccc;
-    }
-    .boat-item {
-      margin: 5px 0;
-      padding: 5px;
-      cursor: pointer;
-      border-left: 5px solid transparent;
-    }
-    .boat-item:hover {
-      background: #eee;
-    }
-  </style>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
-  <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+    <meta charset="UTF-8">
+    <title>Solo Guy Cotten - Cartographie</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            height: 100vh;
+            display: flex;
+        }
+        #sidebar {
+            width: 240px;
+            background: #f4f4f4;
+            padding: 1em;
+        }
+        #windy {
+            flex-grow: 1;
+        }
+    </style>
 </head>
 <body>
-  
     <div id="sidebar">
-      <h3>Skippers</h3>
-      <button onclick="loadPositions()" style="margin-bottom:10px;">🔄 Rafraîchir</button>
-      <div id="boatList"></div>
+        <h3>Skippers</h3>
+        <button onclick="loadPositions()">Rafraîchir</button>
+        <ul id="skipperList"></ul>
     </div>
-    
-  <div id="windy"></div>
+    <div id="windy"></div>
 
-  <script>
-    const parcours = [[47.84617, -3.95517], [47.76733, -4.012], [47.7575, -4.0675], [47.75532, -4.31867], [47.7745, -4.378], [47.79667, -4.39833], [48.03947, -4.7596], [48.36982, -5.07917], [48.06417, -5.13667], [47.64632, -4.02332], [46.84083, -3.1375], [47.48567, -3.29098], [47.70933, -3.83048], [47.79747, -3.89082], [47.84617, -3.95517]];
+    <script>
+        let xmlDisplayPoints = []; // Déclaré une seule fois ici
 
-    function toRad(x) {
-      return x * Math.PI / 180;
-    }
+        function loadPositions() {
+            fetch("https://solo.studiok37.com/proxy.php")
+                .then(response => response.text())
+                .then(str => {
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(str, "application/xml");
+                    const devices = Array.from(xml.getElementsByTagName("Device"));
 
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371e3;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat / 2) ** 2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
+                    xmlDisplayPoints = []; // Réaffectation seulement ici
 
-    function computeDTF(lat, lon) {
-      let minDist = Infinity;
-      let index = 0;
+                    devices.forEach(device => {
+                        const name = device.getAttribute("name");
+                        const marker = device.getAttribute("marker");
+                        const pos = device.getElementsByTagName("Position")[0];
+                        const lat = parseFloat(pos.getElementsByTagName("Latitude")[0].textContent);
+                        const lon = parseFloat(pos.getElementsByTagName("Longitude")[0].textContent);
+                        xmlDisplayPoints.push({ name, marker, lat, lon });
+                    });
 
-      for (let i = 0; i < parcours.length - 1; i++) {
-        const d = haversine(lat, lon, parcours[i][0], parcours[i][1]);
-        if (d < minDist) {
-          minDist = d;
-          index = i;
+                    displaySkippers();
+                });
         }
-      }
 
-      let remaining = haversine(lat, lon, parcours[index][0], parcours[index][1]);
-      for (let i = index; i < parcours.length - 1; i++) {
-        remaining += haversine(parcours[i][0], parcours[i][1], parcours[i+1][0], parcours[i+1][1]);
-      }
-
-      return (remaining / 1852).toFixed(1); // Convert to NM
-    }
-
-    const options = {
-      key: 'HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn',
-      verbose: true,
-      lat: 47.5,
-      lon: -4.1,
-      zoom: 8,
-    };
-
-    const colors = [
-      'red', 'blue', 'green', 'orange', 'purple', 'cyan', 'magenta', 'lime', 'teal', 'maroon',
-      'navy', 'olive', 'darkgreen', 'chocolate', 'indigo', 'coral', 'tomato', 'gold', 'deepskyblue', 'hotpink'
-    ];
-
-    windyInit({...options, overlay: 'wind'}, windyAPI => {
-      const { map } = windyAPI;
-      const boatList = document.getElementById("boatList");
-
-      const parcoursLine = L.polyline(parcours, {
-        color: "#FBCF15",
-        weight: 3,
-        dashArray: "5, 5"
-      }).addTo(map);
-
-      async function loadPositions() {
-        try {
-          const res = await fetch('https://solo.studiok37.com/proxy.php');
-          const xmlText = await res.text();
-          const parser = new DOMParser();
-          const xml = parser.parseFromString(xmlText, "application/xml");
-
-          if (window.markers) window.markers.forEach(m => map.removeLayer(m));
-          if (window.tracks) window.tracks.forEach(t => map.removeLayer(t));
-          window.markers = [];
-          window.tracks = [];
-          
-          boatList.innerHTML = "";
-          const status = document.createElement("div");
-          status.style.margin = "10px 0";
-          status.style.fontSize = "12px";
-          status.style.color = "#888";
-          status.innerText = "Chargement des positions...";
-          boatList.appendChild(status);
-    
-
-          const devices = xml.querySelectorAll("Device");
-          
-          // Construire une liste de bateaux avec DTF
-          const boatData = [];
-          devices.forEach((device, i) => {
-            const boatName = device.getAttribute("name") || "Unknown Boat";
-            let xmlDisplayPoints = device.querySelectorAll("Position");
-            if (!xmlDisplayPoints.length) return;
-
-            const lat = parseFloat(positions[0].querySelector("Latitude").textContent);
-            const lon = parseFloat(positions[0].querySelector("Longitude").textContent);
-            const dtf = parseFloat(computeDTF(lat, lon));
-            boatData.push({ device, name, dtf, index: i });
-          });
-
-          // Trier par DTF croissant
-          boatData.sort((a, b) => a.dtf - b.dtf);
-
-          boatData.forEach(({ device, name, dtf, index }) => {
-            let xmlDisplayPoints = device.querySelectorAll("Position");
-    
-            const boatName = device.getAttribute("name") || "Unknown Boat";
-            let xmlDisplayPoints = device.querySelectorAll("Position");
-            if (!xmlDisplayPoints.length) return;
-
-            const path = [];
-            xmlDisplayPoints.forEach(pos => {
-              const lat = parseFloat(pos.querySelector("Latitude").textContent);
-              const lon = parseFloat(pos.querySelector("Longitude").textContent);
-              path.push([lat, lon]);
+        function displaySkippers() {
+            const list = document.getElementById("skipperList");
+            list.innerHTML = "";
+            xmlDisplayPoints.forEach(skipper => {
+                const li = document.createElement("li");
+                li.textContent = skipper.name;
+                list.appendChild(li);
             });
-
-            const latest = xmlDisplayPoints[0];
-            const lat = parseFloat(latest.querySelector("Latitude").textContent);
-            const lon = parseFloat(latest.querySelector("Longitude").textContent);
-            const sog = latest.querySelector("SOG")?.textContent || "N/A";
-            const cog = latest.querySelector("COG")?.textContent || "N/A";
-            const timeUTC = latest.querySelector("GpsAt")?.textContent || "N/A";
-
-            const localTime = new Date(timeUTC);
-            const optionsTime = {
-              timeZone: 'Europe/Paris',
-              hour: '2-digit',
-              minute: '2-digit',
-              day: '2-digit',
-              month: '2-digit'
-            };
-            const localTimeStr = localTime.toLocaleString('fr-FR', optionsTime);
-
-            const dtf = computeDTF(lat, lon);
-
-            const popup = `
-              <b>${name}</b><br>
-              <small>Dernier point : ${localTimeStr}</small><br>
-              DTF : <b>${dtf} NM</b><br>
-              Vitesse : ${sog} kn<br>
-              Cap : ${cog}°
-            `;
-
-            const boatIcon = L.divIcon({
-              className: '',
-              html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${colors[i % colors.length]}"><path d="M12 2C10.895 2 10 2.895 10 4V11.586L6.707 8.293C6.077 7.663 5 8.109 5 9V14.586L3.707 13.293C3.077 12.663 2 13.109 2 14V20C2 21.105 2.895 22 4 22H20C21.105 22 22 21.105 22 20V14C22 13.109 20.923 12.663 20.293 13.293L19 14.586V9C19 8.109 17.923 7.663 17.293 8.293L14 11.586V4C14 2.895 13.105 2 12 2Z"/></svg>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10],
-              popupAnchor: [0, -10]
-            });
-
-            const marker = L.marker([lat, lon], { icon: boatIcon }).addTo(map).bindPopup(popup);
-            const polyline = L.polyline(path, {
-              color: colors[i % colors.length],
-              weight: 2
-            }).addTo(map);
-
-            const item = document.createElement("div");
-            item.className = "boat-item";
-            item.textContent = boatName + " (" + dtf + " NM)";
-            item.style.borderLeftColor = colors[i % colors.length];
-            item.onclick = () => {
-              map.setView([lat, lon], 10);
-              marker.openPopup();
-            };
-            boatList.appendChild(item);
-
-            window.markers.push(marker);
-            window.tracks.push(polyline);
-          });
-        } catch (error) {
-          
-          console.error("Erreur lors du chargement des positions :", error);
-          boatList.innerHTML = "<p style='color:red; font-size:13px;'>Erreur de chargement des positions. Vérifiez le proxy ou la console navigateur.</p>";
-    
         }
-      }
 
-      loadPositions();
-      setInterval(loadPositions, 15 * 60 * 1000);
-    });
-  </script>
+        loadPositions();
+    </script>
 </body>
 </html>
