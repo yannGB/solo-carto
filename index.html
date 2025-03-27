@@ -1,71 +1,66 @@
-
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Solo Guy Cotten - Cartographie</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Solo Guy Cotten - Cartographie Live</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            height: 100vh;
-            display: flex;
-        }
-        #sidebar {
-            width: 240px;
-            background: #f4f4f4;
-            padding: 1em;
-        }
-        #windy {
-            flex-grow: 1;
-        }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font-family: sans-serif;
+      }
+      #sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 230px;
+        background: #f3f3f3;
+        padding: 10px;
+        overflow-y: auto;
+        z-index: 1000;
+      }
+      #windy {
+        position: absolute;
+        top: 0;
+        left: 230px;
+        right: 0;
+        bottom: 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="sidebar">
-        <h3>Skippers</h3>
-        <button onclick="loadPositions()">Rafraîchir</button>
-        <ul id="skipperList"></ul>
+      <h3>Skippers</h3>
+      <button onclick="loadPositions()">🔄 Rafraîchir</button>
+      <ul id="skipperList"></ul>
     </div>
     <div id="windy"></div>
 
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+
     <script>
-        let xmlDisplayPoints = []; // Déclaré une seule fois ici
+      // Initialisation de la carte Windy
+      const options = {
+        key: "HmMjBrCUlBFacsLNbgMK1ycyBYhjbEJn", // Clé Windy valide
+        verbose: false,
+        lat: 47.5,
+        lon: -4.1,
+        zoom: 7,
+      };
 
-        function loadPositions() {
-            fetch("https://solo.studiok37.com/proxy.php")
-                .then(response => response.text())
-                .then(str => {
-                    const parser = new DOMParser();
-                    const xml = parser.parseFromString(str, "application/xml");
-                    const devices = Array.from(xml.getElementsByTagName("Device"));
+      windyInit(options, windyAPI => {
+        const { map } = windyAPI;
 
-                    xmlDisplayPoints = []; // Réaffectation seulement ici
+        // Pour la suite, les éléments Leaflet seront ajoutés ici
+        // mais pour ce premier test, on ne fait qu’afficher la carte
 
-                    devices.forEach(device => {
-                        const name = device.getAttribute("name");
-                        const marker = device.getAttribute("marker");
-                        const pos = device.getElementsByTagName("Position")[0];
-                        const lat = parseFloat(pos.getElementsByTagName("Latitude")[0].textContent);
-                        const lon = parseFloat(pos.getElementsByTagName("Longitude")[0].textContent);
-                        xmlDisplayPoints.push({ name, marker, lat, lon });
-                    });
-
-                    displaySkippers();
-                });
-        }
-
-        function displaySkippers() {
-            const list = document.getElementById("skipperList");
-            list.innerHTML = "";
-            xmlDisplayPoints.forEach(skipper => {
-                const li = document.createElement("li");
-                li.textContent = skipper.name;
-                list.appendChild(li);
-            });
-        }
-
-        loadPositions();
+        console.log("✅ Carte Windy initialisée.");
+      });
     </script>
-</body>
+  </body>
 </html>
