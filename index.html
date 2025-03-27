@@ -65,11 +65,11 @@
               console.log(`[${name}] Point ${index} : ${gpsAt}`);
             });
 
-            const latest = positions[0]; // LA PLUS RÉCENTE"
+            const latest = positions[0]; // LA PLUS RÉCENTE
             const lat = parseFloat(latest.querySelector("Latitude").textContent);
             const lon = parseFloat(latest.querySelector("Longitude").textContent);
             const sog = latest.querySelector("SOG")?.textContent || "N/A";
-            const cog = latest.querySelector("COG")?.textContent || "N/A";
+            const cog = parseFloat(latest.querySelector("COG")?.textContent) || 0;
             const timeUTC = latest.querySelector("GpsAt")?.textContent || "N/A";
 
             const localTime = new Date(timeUTC);
@@ -91,38 +91,30 @@
               Cap: ${cog}°
             `;
 
-            const boatIcon = L.divIcon({
+            // Icône triangle orienté selon le cap (COG)
+            const triangleIcon = L.divIcon({
               className: '',
-              html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${colors[i % colors.length]}"><path d="M12 2C10.895 2 10 2.895 10 4V11.586L6.707 8.293C6.077 7.663 5 8.109 5 9V14.586L3.707 13.293C3.077 12.663 2 13.109 2 14V20C2 21.105 2.895 22 4 22H20C21.105 22 22 21.105 22 20V14C22 13.109 20.923 12.663 20.293 13.293L19 14.586V9C19 8.109 17.923 7.663 17.293 8.293L14 11.586V4C14 2.895 13.105 2 12 2Z"/></svg>`,
+              html: `<div style="
+                width: 0; 
+                height: 0; 
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-bottom: 20px solid ${colors[i % colors.length]}; 
+                transform: rotate(${cog}deg);
+                transform-origin: center;
+              "></div>`,
               iconSize: [20, 20],
               iconAnchor: [10, 10],
-              popupAnchor: [0, -10]
             });
 
-          const latestPoint = points[0];
-          const latitude = latestPoint.lat;
-          const longitude = latestPoint.lon;
-          const currentCog = latestPoint.cog || 0;
-          
-          // Icône triangle orienté selon le cap (COG)
-          const triangleIcon = L.divIcon({
-            className: '',
-            html: `<div style="
-              width: 0; 
-              height: 0; 
-              border-left: 10px solid transparent;
-              border-right: 10px solid transparent;
-              border-bottom: 20px solid ${color}; 
-              transform: rotate(${currentCog}deg);
-              transform-origin: center;
-            "></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-          });
-          
-          L.marker([latitude, longitude], { icon: triangleIcon })
-            .addTo(map)
-            .bindPopup(popupContent);
+            const marker = L.marker([lat, lon], { icon: triangleIcon })
+              .addTo(map)
+              .bindPopup(popup);
+
+            const polyline = L.polyline(path, {
+              color: colors[i % colors.length],
+              weight: 2
+            }).addTo(map);
 
             window.markers.push(marker);
             window.tracks.push(polyline);
@@ -136,30 +128,29 @@
       setInterval(loadPositions, 15 * 60 * 1000);
 
       // Ajouter le tracé du parcours en jaune
-const parcoursCoords = [
-  [47.84617, -3.95517],
-  [47.76733, -4.01200],
-  [47.75750, -4.06750],
-  [47.75532, -4.31867],
-  [47.77450, -4.37800],
-  [47.79667, -4.39833],
-  [48.03947, -4.75960],
-  [48.36982, -5.07917],
-  [48.06417, -5.13667],
-  [46.84083, -3.13750],
-  [47.31462, -3.04863],
-  [47.48567, -3.29098],
-  [47.70933, -3.83048],
-  [47.79747, -3.89082],
-  [47.84617, -3.95517] // retour au départ
-];
+      const parcoursCoords = [
+        [47.84617, -3.95517],
+        [47.76733, -4.01200],
+        [47.75750, -4.06750],
+        [47.75532, -4.31867],
+        [47.77450, -4.37800],
+        [47.79667, -4.39833],
+        [48.03947, -4.75960],
+        [48.36982, -5.07917],
+        [48.06417, -5.13667],
+        [46.84083, -3.13750],
+        [47.31462, -3.04863],
+        [47.48567, -3.29098],
+        [47.70933, -3.83048],
+        [47.79747, -3.89082],
+        [47.84617, -3.95517] // retour au départ
+      ];
 
-const parcours = L.polyline(parcoursCoords, {
-  color: '#FBCF15',
-  weight: 3,
-  dashArray: '5, 5'
-}).addTo(map);
-      
+      const parcours = L.polyline(parcoursCoords, {
+        color: '#FBCF15',
+        weight: 3,
+        dashArray: '5, 5'
+      }).addTo(map);
     });
   </script>
 </body>
